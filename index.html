@@ -1,57 +1,3 @@
-<script>
-// ═══ PWA: Service Worker + instalación + aviso de actualización ═══
-(function () {
-  // Botón flotante "Instalar app" (solo aparece cuando el navegador lo permite)
-  let deferredPrompt = null;
-  const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-
-  function floatBtn(id, text, onclick, bottom) {
-    if (document.getElementById(id)) return;
-    const b = document.createElement('button');
-    b.id = id; b.textContent = text; b.onclick = onclick;
-    b.style.cssText = 'position:fixed;right:16px;bottom:' + bottom + 'px;z-index:99999;padding:10px 16px;border-radius:999px;' +
-      'border:1px solid #C9A876;background:#121110;color:#ECDFC0;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.04em;' +
-      'cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.6)';
-    document.body.appendChild(b);
-  }
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    if (isStandalone()) return;
-    deferredPrompt = e;
-    floatBtn('pwa-install-btn', '⬇ Instalar app', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice.catch(() => {});
-      deferredPrompt = null;
-      const el = document.getElementById('pwa-install-btn'); if (el) el.remove();
-    }, 16);
-  });
-  window.addEventListener('appinstalled', () => {
-    const el = document.getElementById('pwa-install-btn'); if (el) el.remove();
-  });
-
-  if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((reg) => {
-      // Nueva versión disponible → avisar y recargar al aceptar
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        if (!nw) return;
-        nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            floatBtn('pwa-update-btn', '↻ Nueva versión — actualizar', () => nw.postMessage('SKIP_WAITING'), 60);
-          }
-        });
-      });
-    }).catch(err => console.warn('[PWA] Service Worker no disponible:', err));
-    let reloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded) return; reloaded = true; location.reload();
-    });
-  });
-})();
-</script>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -62,10 +8,12 @@
 <meta name="theme-color" content="#121110"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
-<meta name="application-name" content="J&M AROMAS"/>
-<meta name="apple-mobile-web-app-title" content="J&M AROMAS"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="apple-mobile-web-app-title" content="J&M Aromas"/>
+<meta name="application-name" content="J&M Aromas"/>
+<meta name="description" content="Sistema de gestión para perfumería J&M Aromas"/>
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="96x96" href="./icons/favicon-96.png"/>
 <title>J&M AROMAS — Sistema de Gestión para Perfumería</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -758,7 +706,6 @@ tbody tr:last-child td { border-bottom: none; }
   .login-box { width: 100%; max-width: 360px; margin: 16px; padding: 28px 22px; }
 }
 .jm-filter-field{display:flex;flex-direction:column;gap:4px}.jm-filter-field label{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}</style>
-<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAMAAAC8EZcfAAAB/lBMVEXbXpzal5vbocXfbSbZ4tbPb3zqkCLnn1b003Xz2IXl1rb8/Pvayqjv5coWFRXo3cEJCQrd0bEpKCbgza3Vw5358tmwppA3NTFYVU9uZ1d5dnBLSEaQhnNqaWhMRTqYlpDu6+PFt5qmm4djW04nIxvHu6aEemm3trHY1tCJiYhDOzLKycWoqKciHBi6spbu4b2jl3x6clybknqMxWuX2IccHSJJuC+CdF2UvGgeISAhHSBbW2LMaKrkxZR/gIKH03elwXeg146w2qfVQ4rYcq/Km67alcrCrpXbpazkoJXwtyoeIRw9PUI+QT0/QUA3tRA8uiZYUT5zFpV9foFrxVN7wWKTOLC0OZmsvH25xIyy56bRH4zYN4/aUzDZWGnQe4vTfMXZjMfZp9PqiBznmrLpqmrgo6zxwiv1ynRdYWBTvUFUwT1ZwENiX2B+gHlwvl2YRZufS62Af4OfoaO8Tp6yTqK1Uqqrpn2+wb+/wsDNADDVAlzRJVrZLInQN13QRzgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD3VSiQAAAAgHRSTlP//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////xUHpOoAABdJSURBVHjaxZ0Fg+M4loAzs3QnS7LMlpnCUNQ0tDi4zMx8zAz71+9JhjiJ7TiV7jnNVOJK4virx5Il9US5uhGiItzVkErI1d8+uershKgaHm6aSpL/J0Ci4rFNJR83YNItOUO001elJMnHCEg0/Jj2KMbLAcmi8+oGMuQjgmcD9eo6edWAB8LTWr+gpklIZOw/pGlXiPEyQHKitbIhJA/RaTOO+C5GnFyIBz6wd4MGoeHRau4W4wkhxuRVABKM2x5aCUg834AAd3Z2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"/>
 <style>
 /* ── TX LOGO STYLES ── */
 .tx-logo-img {
@@ -911,12 +858,13 @@ tbody tr:last-child td { border-bottom: none; }
 .pos-cat:hover { color: var(--text1); border-color: rgba(201,168,118,0.35); }
 .pos-cat.active { background: var(--accent3); border-color: var(--accent); color: var(--accent2); }
 .pos-products-grid {
-  flex: 1; overflow-y: auto; padding: 12px;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+  flex: 1; overflow-y: auto; padding: 8px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 7px;
+  align-content: start;
 }
 .pos-product-card {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 12px; cursor: pointer;
+  border-radius: 10px; padding: 8px; cursor: pointer;
   transition: all var(--transition); user-select: none; text-align: center;
 }
 .pos-product-card:hover:not(.out) {
@@ -1134,6 +1082,24 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* Sidebar mobile open state */
 @media (max-width: 768px) {
+  .pos-layout { position: relative; display: block; height: calc(100vh - var(--topbar-h)); }
+  .pos-products { width: 100%; height: 100%; border-right: 0; }
+  .pos-cart { display: none; position: fixed; inset: var(--topbar-h) 0 0 0; z-index: 900; max-height: none; width: 100%; border-left: 0; }
+  .pos-cart.mobile-open { display: flex; }
+  .pos-mobile-cart-toggle {
+    display: flex !important; position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 850; min-height: 48px; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 14px; border: 1px solid var(--border2); border-radius: 14px;
+    background: rgba(29,28,25,.96); color: var(--text1); box-shadow: var(--shadow2); backdrop-filter: blur(12px);
+  }
+  .pos-mobile-cart-toggle strong { color: var(--accent2); }
+  .pos-mobile-cart-close { display: inline-flex !important; }
+  .pos-cart .cart-items { min-height: 0; }
+  .pos-products-grid { padding: 8px 8px 76px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .pos-product-card { padding: 7px; }
+  .pos-product-name { font-size: .7rem; }
+  .pos-product-price { font-size: .8rem; }
+
   .sidebar { transform: translateX(-100%); transition: transform .25s ease; }
   .sidebar.open { transform: translateX(0); }
   #sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; display: none; }
@@ -2373,10 +2339,15 @@ Views.POS = {
             ${Views.POS.renderProductCards(Views.POS.allProducts)}
           </div>
         </div>
-        <div class="pos-cart">
+        <button class="pos-mobile-cart-toggle" id="pos-mobile-cart-toggle" style="display:none" onclick="Views.POS.toggleMobileCart()">
+          <span>🛒 Carrito <strong id="pos-mobile-cart-count">0</strong></span>
+          <span id="pos-mobile-cart-total">RD$ 0.00</span>
+        </button>
+        <div class="pos-cart" id="pos-cart-panel">
           <div class="cart-header">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div class="cart-title">🛒 Carrito <span class="cart-badge" id="cart-count">0</span></div>
+              <button class="btn btn-ghost btn-sm pos-mobile-cart-close" style="display:none" onclick="Views.POS.toggleMobileCart(false)" aria-label="Cerrar carrito">✕</button>
               <select id="pos-price-tier" style="font-size:.68rem;padding:3px 6px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--text2)" onchange="Views.POS.applyPriceTier(this.value)" title="Tipo de precio">
                 <option value="precio">Público</option>
                 <option value="precioMayorista">Mayorista</option>
@@ -2411,6 +2382,23 @@ Views.POS = {
           </div>
         </div>
       </div>`;
+    Views.POS.updateMobileCartSummary();
+  },
+
+  toggleMobileCart(force) {
+    const panel = U.id('pos-cart-panel');
+    if (!panel) return;
+    const open = typeof force === 'boolean' ? force : !panel.classList.contains('mobile-open');
+    panel.classList.toggle('mobile-open', open);
+  },
+
+  updateMobileCartSummary() {
+    const count = Views.POS.cart.reduce((s,i)=>s+Number(i.qty||0),0);
+    const total = Views.POS.cart.reduce((s,i)=>s+Number(i.precio||0)*Number(i.qty||0),0);
+    const c = U.id('pos-mobile-cart-count');
+    const t = U.id('pos-mobile-cart-total');
+    if(c) c.textContent = count;
+    if(t) t.textContent = U.fmt.money(total);
   },
 
   renderProductCards(products) {
@@ -2529,6 +2517,7 @@ Views.POS = {
         </div>
       </div>`).join('');
     Views.POS.updateTotals();
+    Views.POS.updateMobileCartSummary();
   },
 
   changeQty(idx, delta) {
@@ -2594,6 +2583,7 @@ Views.POS = {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <button class="btn btn-secondary" style="padding:18px 10px;font-size:.9rem" onclick="Views.POS.seleccionarEntrega('retiro')">🏪<br><strong>Retiro en tienda</strong><br><small style="color:var(--text3)">El cliente viene a recoger</small></button>
         <button class="btn btn-primary" style="padding:18px 10px;font-size:.9rem" onclick="Views.POS.mostrarDatosDelivery()">🚚<br><strong>Delivery</strong><br><small style="color:var(--text3)">Enviar al cliente</small></button>
+        <button class="btn btn-secondary" style="padding:18px 10px;font-size:.9rem;grid-column:1/-1" onclick="Views.POS.mostrarDatosAgencia()">📦<br><strong>Envío por agencia</strong><br><small style="color:var(--text3)">Enviar mediante una agencia</small></button>
       </div>`,
       `<button class="btn btn-secondary" onclick="Views.POS.cancelarCheckout()">Cancelar</button>`,
       'modal-sm'
@@ -2606,6 +2596,100 @@ Views.POS = {
     p.tipoEntrega = tipo;
     p.costoDelivery = 0;
     p.delivery = null;
+    App.closeModal();
+    await Views.POS.continuarCobro();
+  },
+
+  async mostrarDatosAgencia() {
+    const clientes = await DB.getAll('clientes');
+    const clienteOpts = clientes.map(c => `<option value="${c.id}" data-nom="${U.esc(c.nombre||'')}" data-tel="${U.esc(c.telefono||'')}" data-dir="${U.esc(c.direccion||'')}" data-sector="${U.esc(c.sector||'')}">${U.esc(c.nombre||'Cliente')}</option>`).join('');
+    App.closeModal();
+    App.openModal('📦 Datos del envío por agencia', `
+      <div class="form-group">
+        <label class="form-label">Cliente registrado</label>
+        <select class="form-control" id="sale-ag-cliente" onchange="Views.POS.autoFillAgenciaCliente(this)">
+          <option value="">Cliente ocasional</option>${clienteOpts}
+        </select>
+      </div>
+      <div class="form-row form-row-2">
+        <div class="form-group"><label class="form-label">Nombre *</label><input class="form-control" id="sale-ag-nombre" placeholder="Nombre del cliente"/></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-control" id="sale-ag-tel" placeholder="809-000-0000"/></div>
+      </div>
+      <div class="form-row form-row-2">
+        <div class="form-group"><label class="form-label">Dirección *</label><input class="form-control" id="sale-ag-dir" placeholder="Calle, número, edificio..."/></div>
+        <div class="form-group"><label class="form-label">Sector</label><input class="form-control" id="sale-ag-sector" placeholder="Sector / zona"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Referencia</label><input class="form-control" id="sale-ag-ref" placeholder="Punto de referencia (opcional)"/></div>
+      <div class="form-row form-row-2">
+        <div class="form-group"><label class="form-label">Agencia de envío *</label><input class="form-control" id="sale-ag-agencia" placeholder="Nombre de la agencia"/></div>
+        <div class="form-group"><label class="form-label">Costo del envío</label><input class="form-control" id="sale-ag-costo" type="number" min="0" step="0.01" value="0" oninput="Views.POS.actualizarTotalAgencia()"/></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total final</label>
+        <div id="sale-ag-total" style="font-size:1.25rem;font-weight:800;padding:9px 0;color:var(--accent2)">${U.fmt.money(Views.POS._pending?.total||0)}</div>
+      </div>
+      <div style="padding:9px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:.72rem;color:var(--text3)">ℹ️ El pedido se registrará como <strong>Envío por agencia</strong>. Se conservarán los datos del cliente, dirección, referencia y agencia en la venta.</div>`,
+      `<button class="btn btn-secondary" onclick="Views.POS.mostrarTipoEntrega()">← Atrás</button>
+       <button class="btn btn-primary" onclick="Views.POS.confirmarDatosAgencia()">📦 Continuar</button>`,
+      'modal-lg'
+    );
+    const selCliente = U.id('sale-ag-cliente');
+    if (selCliente && selCliente.value) Views.POS.autoFillAgenciaCliente(selCliente);
+  },
+
+  autoFillAgenciaCliente(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const nombre = U.id('sale-ag-nombre');
+    const tel = U.id('sale-ag-tel');
+    const dir = U.id('sale-ag-dir');
+    const sector = U.id('sale-ag-sector');
+    if (!opt || !opt.value) {
+      if (nombre) nombre.value = '';
+      if (tel) tel.value = '';
+      if (dir) dir.value = '';
+      if (sector) sector.value = '';
+      return;
+    }
+    if (nombre) nombre.value = opt.dataset.nom || '';
+    if (tel) tel.value = opt.dataset.tel || '';
+    if (dir) dir.value = opt.dataset.dir || '';
+    if (sector) sector.value = opt.dataset.sector || '';
+  },
+
+  actualizarTotalAgencia() {
+    const p = Views.POS._pending;
+    if (!p) return;
+    const costo = Math.max(0, parseFloat(U.id('sale-ag-costo')?.value || 0));
+    const el = U.id('sale-ag-total');
+    if (el) el.textContent = U.fmt.money(p.total + costo);
+  },
+
+  async confirmarDatosAgencia() {
+    const p = Views.POS._pending;
+    if (!p) return;
+    const nombre = U.id('sale-ag-nombre')?.value.trim();
+    const telefono = U.id('sale-ag-tel')?.value.trim() || '';
+    const direccion = U.id('sale-ag-dir')?.value.trim();
+    const sector = U.id('sale-ag-sector')?.value.trim() || '';
+    const referencia = U.id('sale-ag-ref')?.value.trim() || '';
+    const agencia = U.id('sale-ag-agencia')?.value.trim();
+    if (!nombre) { Toast.error('El nombre del cliente es obligatorio'); return; }
+    if (!direccion) { Toast.error('La dirección de envío es obligatoria'); return; }
+    if (!agencia) { Toast.error('La agencia de envío es obligatoria'); return; }
+
+    p.tipoEntrega = 'agencia';
+    p.costoDelivery = Math.max(0, parseFloat(U.id('sale-ag-costo')?.value || 0));
+    p.total = p.total + p.costoDelivery;
+    p.delivery = {
+      clienteId: U.id('sale-ag-cliente')?.value || null,
+      clienteNombre: nombre,
+      telefono,
+      direccion,
+      sector,
+      referencia,
+      agencia,
+      costoEnvio: p.costoDelivery
+    };
     App.closeModal();
     await Views.POS.continuarCobro();
   },
@@ -2710,7 +2794,7 @@ Views.POS = {
         <div style="text-align:center;margin-bottom:16px">
           <div style="font-size:.8rem;color:var(--text3)">Total a cobrar</div>
           <div style="font-size:2rem;font-weight:800;color:var(--accent2)">${U.fmt.money(p.total)}</div>
-          ${p.tipoEntrega==='delivery' ? `<div style="font-size:.72rem;color:var(--text3);margin-top:5px">🚚 Incluye delivery: ${U.fmt.money(p.costoDelivery)}</div>` : '<div style="font-size:.72rem;color:var(--text3);margin-top:5px">🏪 Retiro en tienda</div>'}
+          ${p.tipoEntrega==='delivery' ? `<div style="font-size:.72rem;color:var(--text3);margin-top:5px">🚚 Incluye delivery: ${U.fmt.money(p.costoDelivery)}</div>` : p.tipoEntrega==='agencia' ? '<div style="font-size:.72rem;color:var(--text3);margin-top:5px">📦 Envío por agencia</div>' : '<div style="font-size:.72rem;color:var(--text3);margin-top:5px">🏪 Retiro en tienda</div>'}
         </div>
         <div class="form-group">
           <label class="form-label">Efectivo recibido</label>
@@ -2729,7 +2813,7 @@ Views.POS = {
         <div style="text-align:center;padding:8px 0 16px">
           <div style="font-size:.8rem;color:var(--text3);margin-bottom:6px">¿Deseas registrar esta venta?</div>
           <div style="font-size:2rem;font-weight:800;color:var(--accent2)">${U.fmt.money(p.total)}</div>
-          <div style="font-size:.78rem;color:var(--text3);margin-top:8px">Método: <strong>${Views.POS.methodLabel(p.method)}</strong> · ${p.tipoEntrega==='delivery'?'🚚 Delivery':'🏪 Retiro en tienda'}</div>
+          <div style="font-size:.78rem;color:var(--text3);margin-top:8px">Método: <strong>${Views.POS.methodLabel(p.method)}</strong> · ${p.tipoEntrega==='delivery'?'🚚 Delivery':p.tipoEntrega==='agencia'?'📦 Envío por agencia':'🏪 Retiro en tienda'}</div>
         </div>`,
         `<button class="btn btn-secondary" onclick="Views.POS.cancelarCheckout()">Cancelar</button>
          <button class="btn btn-primary" onclick="Views.POS.confirmSale()">✅ Confirmar venta</button>`
@@ -3866,7 +3950,7 @@ Views.Ventas = {
     }
     const saldo = Math.max(0, total - Number(v.pagado||0));
     const estado = v.estado==='cotizacion' ? 'COTIZACIÓN' : v.estado==='anulada' ? 'ANULADA' : 'FACTURA';
-    const tipoEntrega = v.tipoEntrega==='delivery' || delivery>0 || /(?:^|\s*[·|])\s*Delivery\s*·/i.test(String(v.notas||'')) ? 'Delivery' : 'Retiro en tienda';
+    const tipoEntrega = v.tipoEntrega==='delivery' || delivery>0 || /(?:^|\s*[·|])\s*Delivery\s*·/i.test(String(v.notas||'')) ? 'Delivery' : (v.tipoEntrega==='agencia' || /Envío por agencia/i.test(String(v.notas||'')) ? 'Envío por agencia' : 'Retiro en tienda');
     const validezDias = Math.max(1, parseInt(v.validezDias || 15, 10));
     const observaciones = String(v.notas || '')
       .replace(/(?:^|\s*[·|]\s*)Delivery\s*·\s*Costo:\s*RD\$\s*[\d.,]+/gi, '')
@@ -3883,7 +3967,7 @@ Views.Ventas = {
     </style></head><body><div class="sheet">
       <div class="top"><div class="brand">${logoHtml}<div><div class="company">J&amp;M AROMAS</div><div class="muted">${U.esc(cfg.direccion||'')} ${cfg.telefono?`· ${U.esc(cfg.telefono)}`:''}<br>${cfg.email?U.esc(cfg.email):''}${cfg.rnc?` · RNC ${U.esc(cfg.rnc)}`:''}</div></div></div><div class="doc"><h1>${estado}</h1><div class="pill">${U.esc(v.numero)}</div><div class="muted" style="margin-top:5px">${d.toLocaleDateString('es-DO')} · ${d.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'})}</div></div></div>
       <div class="line"></div>
-      <div class="info"><div class="box"><div class="label">Cliente</div><div class="value">${U.esc(cliente)}</div></div><div class="box"><div class="label">${v.estado==='cotizacion'?'Válida por':'Forma de pago'}</div><div class="value">${v.estado==='cotizacion'?`${validezDias} días`:U.esc(Views.POS.methodLabel(v.metodoPago||'—'))}</div></div><div class="box"><div class="label">Entrega</div><div class="value">${tipoEntrega==='Delivery'?'🚚 Delivery':'🏪 Retiro en tienda'}</div></div></div>
+      <div class="info"><div class="box"><div class="label">Cliente</div><div class="value">${U.esc(cliente)}</div></div><div class="box"><div class="label">${v.estado==='cotizacion'?'Válida por':'Forma de pago'}</div><div class="value">${v.estado==='cotizacion'?`${validezDias} días`:U.esc(Views.POS.methodLabel(v.metodoPago||'—'))}</div></div><div class="box"><div class="label">Entrega</div><div class="value">${tipoEntrega==='Delivery'?'🚚 Delivery':tipoEntrega==='Envío por agencia'?'📦 Envío por agencia':'🏪 Retiro en tienda'}</div></div></div>
       <table class="items"><thead><tr><th>PRODUCTO</th><th class="c">CANT.</th><th class="c">PRECIO</th></tr></thead><tbody>${items.map(it=>`<tr><td><strong>${U.esc(it.nombre)}</strong>${it.descuento?`<div class="muted">Descuento ${it.descuento}%</div>`:''}</td><td class="c">${it.qty}</td><td class="c">${U.fmt.money(it.precio||0)}</td></tr>`).join('')}</tbody></table>
       <div class="totals"><div class="row"><span>Subtotal productos</span><strong>${U.fmt.money(subtotalProductos)}</strong></div>${descuento>0?`<div class="row"><span>Descuento</span><strong>− ${U.fmt.money(descuento)}</strong></div>`:''}${delivery>0?`<div class="row delivery"><span>Delivery</span><strong>${U.fmt.money(delivery)}</strong></div>`:''}<div class="grand"><span>TOTAL</span><span>${U.fmt.money(total)}</span></div>${saldo>0?`<div class="balance"><span>Saldo pendiente</span><span>${U.fmt.money(saldo)}</span></div>`:''}${Number(v.cambio||0)>0?`<div class="row"><span>Cambio</span><strong>${U.fmt.money(v.cambio)}</strong></div>`:''}</div>
       ${observaciones?`<div class="notes"><div class="label">Observaciones</div><div>${U.esc(observaciones)}</div></div>`:''}
@@ -7480,8 +7564,10 @@ Views.POS.processSale = async function() {
       cambio,
       metodopago:method,
       fecha:U.now(),
-      notas:tipoEntrega==='delivery'?`Delivery · Costo: ${U.fmt.money(costoDelivery||0)}`:'Retiro en tienda',
-      pagos: method==='credito' ? [] : [{monto:Number(total||0),metodoPago:method}]
+      pagos: method==='credito' ? [] : [{monto:Number(total||0),metodoPago:method}],
+      notas: tipoEntrega==='agencia' && delivery
+        ? `Envío por agencia · Agencia: ${delivery.agencia} · Cliente: ${delivery.clienteNombre} · Tel: ${delivery.telefono} · Dirección: ${delivery.direccion} · Sector: ${delivery.sector} · Referencia: ${delivery.referencia} · Costo envío: ${U.fmt.money(costoDelivery||0)}`
+        : tipoEntrega==='delivery' ? `Delivery · Costo: ${U.fmt.money(costoDelivery||0)}` : 'Retiro en tienda'
     };
 
     const deliveryPayload = (tipoEntrega==='delivery' && delivery) ? {
@@ -7529,6 +7615,7 @@ Views.POS.processSale = async function() {
     Toast.success(`Factura ${result.numero} generada · ${U.fmt.money(total)}`);
     if(cambio>0)Toast.info(`Cambio: ${U.fmt.money(cambio)}`);
     if(tipoEntrega==='delivery'&&delivery)Toast.success(`🚚 Delivery ${result.numero} creado automáticamente`);
+    if(tipoEntrega==='agencia'&&delivery)Toast.success(`📦 Envío por agencia ${result.numero} registrado`);
 
     setTimeout(()=>App.openModal(`Factura ${result.numero} generada`,`<div style="text-align:center;padding:12px"><div style="font-size:2.4rem">✅</div><h3>Venta registrada correctamente</h3><p class="text-muted">${U.esc(result.numero)} · ${U.fmt.money(total)}</p></div>`,`<button class="btn btn-secondary" onclick="App.closeModal()">Cerrar</button><button class="btn btn-primary" onclick="Views.Ventas.printFactura('${U.esc(result.id)}')">🖨️ Imprimir A4</button>`),100);
     AppAudio.saleCashier();
@@ -7731,14 +7818,86 @@ document.addEventListener('DOMContentLoaded', () => App.init());
 </script>
 
 <script>
-// PWA: registra el Service Worker sin alterar la lógica de J&M AROMAS.
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err =>
-      console.warn('[PWA] Service Worker no disponible:', err)
-    );
+/* ═══ PWA: Service Worker + instalación + estado de conexión ═══ */
+(function(){
+  const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  let deferredPrompt = null;
+
+  // Estilos de los avisos PWA (autocontenidos, no tocan el resto del sistema)
+  const st = document.createElement('style');
+  st.textContent = `
+    .pwa-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(16px + env(safe-area-inset-bottom));z-index:99999;
+      background:#26241f;color:#F0E7CA;border:1px solid rgba(223,207,174,.28);border-radius:14px;padding:11px 14px;font:500 .8rem Inter,system-ui,sans-serif;
+      box-shadow:0 12px 48px rgba(0,0,0,.7);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 24px);opacity:0;pointer-events:none;transition:all .25s}
+    .pwa-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .pwa-toast button{border:0;border-radius:9px;padding:7px 12px;font:700 .75rem Inter,system-ui,sans-serif;cursor:pointer;background:linear-gradient(135deg,#ECDFC0,#C9A876);color:#121110}
+    .pwa-toast .pwa-x{background:transparent;color:#B8AD96;padding:4px 6px;font-size:1rem;line-height:1}
+    .pwa-offline{position:fixed;top:0;left:0;right:0;z-index:99998;background:#c98f5c;color:#121110;text-align:center;font:700 .72rem Inter,system-ui,sans-serif;
+      padding:calc(4px + env(safe-area-inset-top)) 8px 4px;letter-spacing:.04em;display:none}
+    .pwa-offline.show{display:block}`;
+  document.head.appendChild(st);
+
+  function toast(html, actions){
+    let el = document.getElementById('pwa-toast');
+    if(!el){ el = document.createElement('div'); el.id='pwa-toast'; el.className='pwa-toast'; document.body.appendChild(el); }
+    el.innerHTML = '<span>'+html+'</span>';
+    (actions||[]).forEach(a=>{
+      const b=document.createElement('button'); b.textContent=a.label; b.className=a.cls||''; b.onclick=()=>{ a.fn&&a.fn(); if(a.close!==false) el.classList.remove('show'); }; el.appendChild(b);
+    });
+    requestAnimationFrame(()=>el.classList.add('show'));
+    return el;
+  }
+
+  // Indicador sin conexión
+  const off = document.createElement('div'); off.className='pwa-offline';
+  off.textContent='Sin conexión — las ventas y consultas requieren Internet';
+  document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(off));
+  const upd = () => off.classList.toggle('show', !navigator.onLine);
+  window.addEventListener('online', upd); window.addEventListener('offline', upd); upd();
+
+  // Service Worker + aviso de nueva versión
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        const ask = w => toast('Hay una nueva versión de J&M Aromas.', [
+          {label:'Actualizar', fn:()=>w.postMessage('SKIP_WAITING')},
+          {label:'×', cls:'pwa-x'}
+        ]);
+        if (reg.waiting && navigator.serviceWorker.controller) ask(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const w = reg.installing;
+          w && w.addEventListener('statechange', () => { if (w.state==='installed' && navigator.serviceWorker.controller) ask(w); });
+        });
+        setInterval(()=>reg.update().catch(()=>{}), 60*60*1000);
+      }).catch(err => console.warn('[PWA] Service Worker no disponible:', err));
+      let reloaded=false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if(reloaded) return; reloaded=true; location.reload(); });
+    });
+  }
+
+  // Instalación (Android/Chrome/Edge/escritorio)
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt = e;
+    if (isStandalone() || localStorage.getItem('jm_pwa_dismiss')) return;
+    setTimeout(()=>toast('Instala J&M Aromas como app en este dispositivo.', [
+      {label:'Instalar', fn:async()=>{ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }},
+      {label:'×', cls:'pwa-x', fn:()=>localStorage.setItem('jm_pwa_dismiss','1')}
+    ]), 4000);
   });
-}
+  window.addEventListener('appinstalled', () => { deferredPrompt=null; toast('App instalada correctamente.', [{label:'OK'}]); });
+
+  // iOS Safari no dispara beforeinstallprompt: instrucciones manuales
+  if (isIOS && !isStandalone() && !localStorage.getItem('jm_pwa_dismiss')) {
+    window.addEventListener('load', () => setTimeout(()=>toast('Para instalar: toca Compartir y luego "Agregar a pantalla de inicio".', [
+      {label:'Entendido', fn:()=>localStorage.setItem('jm_pwa_dismiss','1')}
+    ]), 5000));
+  }
+
+  // Función para instalar desde un botón propio: window.JM_PWA.install()
+  window.JM_PWA = { canInstall:()=>!!deferredPrompt, isStandalone,
+    install: async()=>{ if(!deferredPrompt) return false; deferredPrompt.prompt(); const r=await deferredPrompt.userChoice; deferredPrompt=null; return r.outcome==='accepted'; } };
+})();
 </script>
 </body>
 </html>
